@@ -1,0 +1,20 @@
+{
+    "name": "flipboxstudio/api-fracture",
+    "description": "Fracture is a library to make your Laravel-based API response more consistent",
+    "require": {
+        "league/fractal": "^0.13.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Flipbox\\Fracture\\": "src/Flipbox/Fracture/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Krisan Alfa Timur",
+            "email": "krisan47@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev"
+}
