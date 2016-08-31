@@ -19,7 +19,7 @@ Flipbox\Fracture\FractureServiceProvider::class,
 After that, run:
 
 ```
-php artisan vendor:publish --tag="config"
+php artisan vendor:publish
 ```
 
 This command will copy an empty `fracture.php` configuration into your `config` directory.
@@ -35,53 +35,7 @@ Add this line to your facade list:
 
 ## Usage
 
-To register your route, use `Flipbox\Fracture\Api` facade instead of laravel `Route` facade.
-You need to change your `App\Providers\RouteServiceProvider` class. See the `mapApiRoutes` method.
-On default Laravel installation, it's still use `Route` facade, there you need to change to `Flipbox\Fracture\Api`.
-
-```php
-<?php
-
-namespace App\Providers;
-
-use Flipbox\Fracture\Api;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
-
-class RouteServiceProvider extends ServiceProvider
-{
-    /**
-     * This namespace is applied to your api controller routes.
-     *
-     * In addition, it is set as the URL generator's root namespace.
-     *
-     * @var string
-     */
-    protected $apiNamespace = 'App\Http\Controllers\Api';
-
-    // [... OMITTED ...]
-
-    /**
-     * Define the "api" routes for the application.
-     *
-     * These routes are typically stateless.
-     *
-     * @return void
-     */
-    protected function mapApiRoutes()
-    {
-        Api::group([
-            'middleware' => ['api'],
-            'namespace' => $this->apiNamespace,
-            'prefix' => 'api',
-        ], function ($router) {
-            require base_path('routes/api.php');
-        });
-    }
-}
-```
-
-Then, change your routes file:
+Register your routes endpoint from `routes/fracture.php` file:
 
 ```
 Api::group(['middleware' => ['auth:api']], function ($route) {
@@ -90,6 +44,8 @@ Api::group(['middleware' => ['auth:api']], function ($route) {
     $route->resource('/resource/user', 'UserController');
 });
 ```
+
+> **NOTE** It's important to use `Api` instead of `Route` facade, if you don't, your fracture routes will remain empty, thus makes your API endpoint inaccessible.
 
 Below is an example controller using Fracture:
 
@@ -293,9 +249,7 @@ Here's a snippet to generate error response:
 
 return Fracture::responseError(
     'awww_snap', // API Message
-    new \Exception('Something bad happen'), // An exception instance
-    500, // HTTP status code
-    ['Custom-Header' => 'Flipbox'] // Your header goes here
+    new \Exception('something_goes_wrong') // An exception instance
 );
 ```
 
@@ -307,6 +261,24 @@ From that code, the response is:
   "data": {
     "type": "error",
     "code": 0
+  },
+  "message": "awww_snap"
+}
+```
+
+In debug mode:
+
+```json
+{
+  "success": false,
+  "data": {
+    "type": "error",
+    "code": 0,
+    "message": "something_goes_wrong",
+    "trace": [
+      "#0 [internal function]: App\\Http\\Controllers\\Api\\UserController->index()",
+      // [... OMITTED ...]
+    ]
   },
   "message": "awww_snap"
 }

@@ -15,9 +15,13 @@ class FractureServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__.'/config/fracture.php' => config_path('fracture.php'),
-        ]);
+        ], 'config');
 
-        $this->app->make(Kernel::class)->prependMiddleware(Middlewares\Request::class);
+        $this->publishes([
+            __DIR__.'/routes/fracture.php' => base_path('routes/fracture.php'),
+        ], 'routes');
+
+        $this->prependRequestMiddlewareToKernel();
     }
 
     /**
@@ -30,17 +34,42 @@ class FractureServiceProvider extends ServiceProvider
             'fracture'
         );
 
-        $this->app->singleton(
-            Middlewares\Request::class,
-            Middlewares\Request::class
-        );
+        $this->registerFractureResponseFactory();
 
+        $this->registerFractureRouter();
+
+        $this->mapFractureRoutes();
+    }
+
+    protected function prependRequestMiddlewareToKernel()
+    {
+        $this->app->make(Kernel::class)->prependMiddleware(Middlewares\Request::class);
+    }
+
+    protected function registerFractureResponseFactory()
+    {
         $this->app->singleton([ResponseFactory::class => 'fracture.factory'], function ($app) {
             return new ResponseFactory();
         });
+    }
 
+    protected function registerFractureRouter()
+    {
         $this->app->singleton([Routing\Router::class => 'fracture.router'], function ($app) {
             return new Routing\Router($app->make('events'), $app);
+        });
+    }
+
+    protected function mapFractureRoutes()
+    {
+        $config = $this->app->make('config');
+
+        Api::group([
+            'middleware' => ['api'],
+            'namespace' => $config->get('fracture.routes.namespace'),
+            'subdomain' => $config->get('fracture.routes.subdomain'),
+        ], function ($router) {
+            require base_path('routes/fracture.php');
         });
     }
 }

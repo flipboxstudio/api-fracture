@@ -249,7 +249,7 @@ class ResponseFactory
      */
     public function responseError(
         string $message,
-        Exception $e = null,
+        Exception $e,
         int $status = 500,
         array $headers = [],
         int $options = 0
