@@ -23,7 +23,7 @@ php artisan vendor:publish --tag="config"
 ```
 
 This command will copy an empty `fracture.php` configuration into your `config` directory.
-Read this file for more information.
+You may need to read this file for more custom configuration.
 
 ### Optional
 
@@ -35,12 +35,69 @@ Add this line to your facade list:
 
 ## Usage
 
+To register your route, use `Flipbox\Fracture\Api` facade instead of laravel `Route` facade.
+You need to change your `App\Providers\RouteServiceProvider` class. See the `mapApiRoutes` method.
+On default Laravel installation, it's still use `Route` facade, there you need to change to `Flipbox\Fracture\Api`.
+
+```php
+<?php
+
+namespace App\Providers;
+
+use Flipbox\Fracture\Api;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+
+class RouteServiceProvider extends ServiceProvider
+{
+    /**
+     * This namespace is applied to your api controller routes.
+     *
+     * In addition, it is set as the URL generator's root namespace.
+     *
+     * @var string
+     */
+    protected $apiNamespace = 'App\Http\Controllers\Api';
+
+    // [... OMITTED ...]
+
+    /**
+     * Define the "api" routes for the application.
+     *
+     * These routes are typically stateless.
+     *
+     * @return void
+     */
+    protected function mapApiRoutes()
+    {
+        Api::group([
+            'middleware' => ['api'],
+            'namespace' => $this->apiNamespace,
+            'prefix' => 'api',
+        ], function ($router) {
+            require base_path('routes/api.php');
+        });
+    }
+}
+```
+
+Then, change your routes file:
+
+```
+Api::group(['middleware' => ['auth:api']], function ($route) {
+    $route->get('/user', 'AuthController@user');
+
+    $route->resource('/resource/user', 'UserController');
+});
+```
+
+Below is an example controller using Fracture:
+
 ```php
 <?php
 
 namespace App\Http\Controllers\Api;
 
-use Fracture;
 use App\User;
 use App\Http\Requests;
 use Illuminate\Http\Request;
@@ -57,7 +114,7 @@ class UserController extends Controller
     {
         Fracture::setMessage('user_list_fetched');
 
-        return User::all();
+        return User::all(); // identical with Fracture::responseCollection(User::all(), 'user_list_fetched')
     }
 
     /**
@@ -70,11 +127,34 @@ class UserController extends Controller
     {
         Fracture::setMessage('user_fetched');
 
-        return User::findOrFail($id);
+        return User::findOrFail($id); // identical with Fracture::responseItem(User::findOrFail($id), 'user_fetched')
     }
 ```
 
-Configure your transformer like so:
+Fracture has it's own default transformer which you can configure it on `fracture.php` config file.
+From above controller (with fracture default transformer), here's your response transformed into:
+
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "id": 1,
+        "name": "Krisan Alfa Timur",
+        "email": "alfa@flipbox.co.id",
+        "created_at": "2016-08-29 07:01:08",
+        "updated_at": "2016-08-29 11:37:10",
+        "type": "user"
+      }
+    ]
+  },
+  "message": "user_list_fetched"
+}
+```
+
+To configure your transformer, Fracture will determine the object returned from controller.
+So, to transform your `App\User` object, you need to configure the transformer in `fracture.php`, file inside `transformers`, add `app_user` information there:
 
 ```php
 <?php
@@ -152,6 +232,23 @@ From the above transformer, the response will be transformed into:
 }
 ```
 
+### Set Transformer on The Fly
+
+You can set the transformer just before the response being sent to client.
+To do so, before return any response in controller method, you may call `Fracture::setTransformer` method:
+
+```php
+<?php
+
+use App\Transformers\UserTransformer;
+
+Fracture::setTransformer(UserTransformer::class);
+// Or
+Fracture::setTransformer(new UserTransformer());
+```
+
+### Route Transformer
+
 You also can tell Fracture to use certain transformer via route actions:
 
 ```php
@@ -170,17 +267,17 @@ Route::get('/user', [
 ```php
 <?php
 
-return Fracture::collection(
+return Fracture::responseCollection(
     $collection, // Collection
-    $message = 'user_list', // API Message
+    'user_list', // API Message
     true, // API success status
     200, // HTTP status code
     ['Custom-Header' => 'Flipbox'] // Your header goes here
 );
 
-return Fracture::item(
+return Fracture::responseItem(
     $item, // Item
-    $message = 'user_info', // API Message
+    'user_info', // API Message
     true, // API success status
     200, // HTTP status code
     ['Custom-Header' => 'Flipbox'] // Your header goes here
@@ -189,15 +286,14 @@ return Fracture::item(
 
 ### Generating Error Response
 
-Here's snippet to generate error response:
-
+Here's a snippet to generate error response:
 
 ```php
 <?php
 
-return Fracture::error(
-    $message = 'awww_snap', // API Message
-    new Exception('Something bad happen'), // An exception instance
+return Fracture::responseError(
+    'awww_snap', // API Message
+    new \Exception('Something bad happen'), // An exception instance
     500, // HTTP status code
     ['Custom-Header' => 'Flipbox'] // Your header goes here
 );
@@ -218,7 +314,8 @@ From that code, the response is:
 
 ## ToDo
 
-- [ ] Unit testing
+- [ ] Refactor (need voulenteer)
+- [x] Unit testing
 - [x] Global error handling
 - [x] Configurable serializer
 - [x] Configurable error serializer

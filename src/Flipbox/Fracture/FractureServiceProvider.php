@@ -35,7 +35,7 @@ class FractureServiceProvider extends ServiceProvider
             Middlewares\Request::class
         );
 
-        $this->app->singleton('fracture.factory', function ($app) {
+        $this->app->singleton([ResponseFactory::class => 'fracture.factory'], function ($app) {
             return new ResponseFactory();
         });
 
