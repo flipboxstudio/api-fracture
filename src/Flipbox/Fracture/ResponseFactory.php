@@ -27,9 +27,16 @@ class ResponseFactory
      * For a flag that someone has touced a success flag.
      * So we can override response success flag with this value.
      *
-     * @var null|string
+     * @var null|bool|boolean
      */
     protected $success = null;
+
+    /**
+     * A transformer of resource.
+     *
+     * @var null|string
+     */
+    protected $transformer = null;
 
     /**
      * Fractal manager.
@@ -107,6 +114,18 @@ class ResponseFactory
         $this->serializer = $serializer;
 
         $this->manager->setSerializer($serializer);
+
+        return $this;
+    }
+
+    /**
+     * Set transformer for current resource.
+     *
+     * @param string|\League\Fractal\TransformerAbstract $transformer
+     */
+    public function setTransformer($transformer)
+    {
+        $this->transformer = $transformer;
 
         return $this;
     }
@@ -257,13 +276,15 @@ class ResponseFactory
     /**
      * Create a transformer.
      *
-     * @param string $transformer
+     * @param string|\League\Fractal\TransformerAbstract $transformer
      *
      * @return mixed
      */
     protected function createTransformer($transformer)
     {
-        return App::make($transformer);
+        return is_string($transformer)
+            ? App::make($transformer)
+            : $transformer;
     }
 
     /**

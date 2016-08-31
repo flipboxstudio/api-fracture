@@ -35,7 +35,8 @@ trait Resolvable
      */
     protected function resolveTransformerFromItem($item)
     {
-        $transformer = $this->getTransformerFromConfiguration($item)
+        $transformer = $this->transformer
+            ?? $this->getTransformerFromConfiguration($item)
             ?? $this->getTransformerFromRouteInformation()
             ?? $this->getDefaultTransformer();
 
