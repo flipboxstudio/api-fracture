@@ -4,26 +4,24 @@ namespace Flipbox\Fracture\Routing;
 
 use Flipbox\Fracture\Fracture;
 use Illuminate\Support\Fluent;
-use Illuminate\Routing\Route as IlluminateRoute;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Support\Collection as IlluminateCollection;
+use Illuminate\Routing\Controller as IlluminateController;
 use Illuminate\Contracts\Pagination\Paginator as IlluminatePaginator;
-use Illuminate\Routing\ControllerDispatcher as IlluminateControllerDispatcher;
 
-class ControllerDispatcher extends IlluminateControllerDispatcher
+abstract class Controller extends IlluminateController
 {
     /**
-     * Dispatch a request to a given controller and method.
+     * Execute an action on the controller.
      *
-     * @param \Illuminate\Routing\Route $route
-     * @param mixed                     $controller
-     * @param string                    $method
+     * @param string $method
+     * @param array  $parameters
      *
-     * @return mixed
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function dispatch(IlluminateRoute $route, $controller, $method)
+    public function callAction($method, $parameters)
     {
-        $response = parent::dispatch($route, $controller, $method);
+        $response = call_user_func_array([$this, $method], $parameters);
 
         if ($this->responseIsACollection($response)) {
             $response = Fracture::responseCollection($response);
@@ -37,9 +35,9 @@ class ControllerDispatcher extends IlluminateControllerDispatcher
     /**
      * Determine if a response type is a collection.
      *
-     * @param  mixed $response
+     * @param mixed $response
      *
-     * @return bool|boolean
+     * @return bool|bool
      */
     protected function responseIsACollection($response) : bool
     {
@@ -50,9 +48,9 @@ class ControllerDispatcher extends IlluminateControllerDispatcher
     /**
      * Determine if a response type is an item.
      *
-     * @param  mixed $response
+     * @param mixed $response
      *
-     * @return bool|boolean
+     * @return bool|bool
      */
     protected function responseIsAnItem($response) : bool
     {

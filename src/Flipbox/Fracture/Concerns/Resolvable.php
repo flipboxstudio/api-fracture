@@ -83,7 +83,9 @@ trait Resolvable
      */
     protected function getTransformerFromRouteInformation()
     {
-        return Arr::get(App::make('router')->current()->getAction(), 'transformer');
+        if (($route = App::make('router')->current()) !== null) {
+            return Arr::get($route->getAction(), 'transformer');
+        }
     }
 
     /**

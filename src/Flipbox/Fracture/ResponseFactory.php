@@ -3,6 +3,7 @@
 namespace Flipbox\Fracture;
 
 use Exception;
+use League\Fractal\Scope;
 use League\Fractal\Manager;
 use Illuminate\Http\JsonResponse;
 use League\Fractal\Resource\Item;
@@ -121,6 +122,20 @@ class ResponseFactory
     /**
      * Set transformer for current resource.
      *
+     * @param bool|boolean $create
+     *
+     * @return mixed
+     */
+    public function getTransformer($create = false)
+    {
+        return $create
+            ? $this->createTransformer($this->transformer)
+            : $this->transformer;
+    }
+
+    /**
+     * Get transformer for current resource.
+     *
      * @param string|\League\Fractal\TransformerAbstract $transformer
      */
     public function setTransformer($transformer)
@@ -190,7 +205,7 @@ class ResponseFactory
      *
      * @return \League\Fractal\Scope
      */
-    public function collection($collection)
+    public function collection($collection) : Scope
     {
         return $this->manager->createData(
             $this->createCollectionResource($collection)
@@ -229,7 +244,7 @@ class ResponseFactory
      *
      * @return \League\Fractal\Scope
      */
-    public function item($item)
+    public function item($item) : Scope
     {
         return $this->manager->createData(
             $this->createItemResource($item)
@@ -256,9 +271,21 @@ class ResponseFactory
     ) : JsonResponse {
         $this->prepareErrorSerializer($message, false);
 
-        return new JsonResponse($this->manager->createData(
+        return new JsonResponse($this->error($e)->toArray(), $status, $headers, $options);
+    }
+
+    /**
+     * Create error scope
+     *
+     * @param  \Exception $e
+     *
+     * @return \League\Fractal\Scope
+     */
+    public function error(Exception $e) : Scope
+    {
+        return $this->manager->createData(
             $this->createErrorResource($e)
-        )->toArray(), $status, $headers, $options);
+        );
     }
 
     /**

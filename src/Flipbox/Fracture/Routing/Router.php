@@ -20,19 +20,40 @@ class Router extends IlluminateRouter
     {
         parent::__construct($events, $container);
 
-        $kernel = $container->make(Kernel::class);
+        $this->supplySelfPropertiesFromKernel($container->make(Kernel::class));
+    }
 
-        $propGetter = Closure::bind(function ($prop) {
-            return $this->$prop;
-        }, $kernel, $kernel);
-
-        foreach ($propGetter('middlewareGroups') as $name => $middleware) {
+    /**
+     * Laravel routing needs this value, so we can get middleware per each routes.
+     *
+     * @param \Illuminate\Contracts\Http\Kernel $kernel
+     *
+     * @return void
+     */
+    protected function supplySelfPropertiesFromKernel(Kernel $kernel)
+    {
+        foreach ($this->getProtectedAttributeValue('middlewareGroups', $kernel) as $name => $middleware) {
             $this->middlewareGroup($name, $middleware);
         }
 
-        foreach ($propGetter('routeMiddleware') as $name => $middleware) {
+        foreach ($this->getProtectedAttributeValue('routeMiddleware', $kernel) as $name => $middleware) {
             $this->middleware($name, $middleware);
         }
+    }
+
+    /**
+     * Get protected attribute from given name and object.
+     *
+     * @param string $attribute
+     * @param mixed  $object
+     *
+     * @return mixed
+     */
+    protected function getProtectedAttributeValue(string $attribute, $object)
+    {
+        return Closure::bind(function ($attribute) {
+            return $this->$attribute;
+        }, $object, $object);
     }
 
     /**
@@ -42,7 +63,7 @@ class Router extends IlluminateRouter
      * @param string       $uri
      * @param mixed        $action
      *
-     * @return \Illuminate\Routing\Route
+     * @return \Flipbox\Fracture\Routing\Route
      */
     protected function newRoute($methods, $uri, $action)
     {

@@ -16,6 +16,9 @@
         }
     },
     "autoload-dev": {
+        "psr-4": {
+            "Test\\": "tests/Test/"
+        },
         "classmap": [
             "tests/TestCase.php"
         ]
