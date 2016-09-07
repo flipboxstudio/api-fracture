@@ -3,11 +3,14 @@
 namespace Flipbox\Fracture\Exception;
 
 use Exception;
-use ReflectionFunction;
 use Illuminate\Http\Response;
 use Flipbox\Fracture\Fracture;
-use Symfony\Component\HttpFoundation\Response as BaseResponse;
+use Illuminate\Container\Container;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandler;
 
 class Handler implements IlluminateExceptionHandler
@@ -23,8 +26,6 @@ class Handler implements IlluminateExceptionHandler
      * Create a new exception handler instance.
      *
      * @param \Illuminate\Contracts\Debug\ExceptionHandler $parentHandler
-     *
-     * @return void
      */
     public function __construct(IlluminateExceptionHandler $parentHandler)
     {
@@ -35,8 +36,6 @@ class Handler implements IlluminateExceptionHandler
      * Report or log an exception.
      *
      * @param \Exception $exception
-     *
-     * @return void
      */
     public function report(Exception $exception)
     {
@@ -81,11 +80,56 @@ class Handler implements IlluminateExceptionHandler
     public function handle(Exception $exception)
     {
         return Fracture::responseError(
-            $exception->getMessage(),
-            $exception,
+            $this->getExceptionMessage($exception),
+            $exception = $this->determineTypeOfException($exception),
             $this->getStatusCode($exception),
             $this->getHeaders($exception)
         );
+    }
+
+    /**
+     * Get exception message.
+     *
+     * @param \Exception $exception
+     *
+     * @return string
+     */
+    protected function getExceptionMessage(Exception $exception) : string
+    {
+        if (Container::getInstance()->make('config')->get('app.debug')
+            && !$exception instanceof HttpExceptionInterface
+        ) {
+            return $exception->getMessage();
+        }
+
+        return $exception instanceof HttpExceptionInterface
+            ? $exception->getMessage()
+            : 'an_error_occured';
+    }
+
+    /**
+     * Replace Laravel AuthenticationException with HttpException.
+     *
+     * @param \Exception $exception
+     *
+     * @return \Exception
+     */
+    protected function determineTypeOfException(Exception $exception) : Exception
+    {
+        if ($exception instanceof AuthenticationException) {
+            $exception = new UnauthorizedHttpException(
+                $exception->getMessage(),
+                $exception
+            );
+        } elseif ($exception instanceof ValidationException) {
+            $exception = new PreconditionFailedHttpException(
+                $exception->getMessage(),
+                $exception,
+                412
+            );
+        }
+
+        return $exception;
     }
 
     /**
@@ -97,7 +141,9 @@ class Handler implements IlluminateExceptionHandler
      */
     protected function getStatusCode(Exception $exception)
     {
-        return $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : 500;
+        return $exception instanceof HttpExceptionInterface
+            ? $exception->getStatusCode()
+            : 500;
     }
 
     /**
@@ -109,19 +155,8 @@ class Handler implements IlluminateExceptionHandler
      */
     protected function getHeaders(Exception $exception)
     {
-        return $exception instanceof HttpExceptionInterface ? $exception->getHeaders() : [];
-    }
-
-    /**
-     * Get the exception status code.
-     *
-     * @param \Exception $exception
-     * @param int        $defaultStatusCode
-     *
-     * @return int
-     */
-    protected function getExceptionStatusCode(Exception $exception, $defaultStatusCode = 500)
-    {
-        return ($exception instanceof HttpExceptionInterface) ? $exception->getStatusCode() : $defaultStatusCode;
+        return $exception instanceof HttpExceptionInterface
+            ? $exception->getHeaders()
+            : [];
     }
 }

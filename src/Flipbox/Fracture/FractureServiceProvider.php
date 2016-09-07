@@ -2,6 +2,7 @@
 
 namespace Flipbox\Fracture;
 
+use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Support\ServiceProvider;
 
 class FractureServiceProvider extends ServiceProvider
@@ -27,6 +28,7 @@ class FractureServiceProvider extends ServiceProvider
         );
 
         $this->registerFractureResponseFactory();
+        $this->prependFractureMiddlewareToKernel();
     }
 
     /**
@@ -41,5 +43,13 @@ class FractureServiceProvider extends ServiceProvider
                 $this->app->make('router')
             );
         });
+    }
+
+    /**
+     * Prepend Fracture Middleware to HTTPKernel.
+     */
+    protected function prependFractureMiddlewareToKernel()
+    {
+        $this->app->make(Kernel::class)->prependMiddleware(Http\Middleware\FractureMiddleware::class);
     }
 }

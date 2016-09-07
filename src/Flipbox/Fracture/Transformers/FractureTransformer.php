@@ -2,7 +2,6 @@
 
 namespace Flipbox\Fracture\Transformers;
 
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use League\Fractal\TransformerAbstract;
