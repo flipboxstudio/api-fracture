@@ -1,6 +1,6 @@
 <?php
 
-namespace Flipbox\Fracture;
+namespace Flipbox\Fracture\Exception;
 
 use Exception;
 use ReflectionFunction;

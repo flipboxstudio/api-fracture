@@ -5,7 +5,7 @@ namespace Flipbox\Fracture\Routing;
 use Flipbox\Fracture\Fracture;
 use Illuminate\Support\Fluent;
 use Illuminate\Container\Container;
-use Flipbox\Fracture\ExceptionHandler;
+use Flipbox\Fracture\Exception\Handler;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as IlluminateCollection;
@@ -28,7 +28,7 @@ abstract class Controller extends IlluminateController
         $app = Container::getInstance();
         $illuminateHandler = $app->make(IlluminateExceptionHandler::class);
 
-        $app->instance(IlluminateExceptionHandler::class, new ExceptionHandler($illuminateHandler));
+        $app->instance(IlluminateExceptionHandler::class, new Handler($illuminateHandler));
 
         $response = call_user_func_array([$this, $method], $parameters);
 
