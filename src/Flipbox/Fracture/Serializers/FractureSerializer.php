@@ -48,7 +48,7 @@ class FractureSerializer extends ArraySerializer
     {
         return $this->finalizeResource(
             $resourceKey,
-            parent::item($resourceKey, $data)
+            parent::item($resourceKey, ['data' => $data])
         );
     }
 
