@@ -4,6 +4,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Sub-Domain Configuration
+    |--------------------------------------------------------------------------
+    |
+    | You need to configure your API sub-domain (to your web application) here.
+    | This is required for automatic error / exception response transformation.
+    |
+    */
+
+    'subdomain' => env('API_SUBDOMAIN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Transformers
     |--------------------------------------------------------------------------
     |

@@ -5,6 +5,7 @@ namespace Flipbox\Fracture;
 use Exception;
 use League\Fractal\Scope;
 use League\Fractal\Manager;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
 use League\Fractal\Resource\Item;
 use League\Fractal\Resource\Collection;
@@ -31,7 +32,7 @@ class ResponseFactory
      * For a flag that someone has touced a success flag.
      * So we can override response success flag with this value.
      *
-     * @var null|bool|boolean
+     * @var null|bool|bool
      */
     protected $success = null;
 
@@ -150,7 +151,7 @@ class ResponseFactory
     /**
      * Set transformer for current resource.
      *
-     * @param bool|boolean $create
+     * @param bool|bool $create
      *
      * @return mixed
      */
@@ -182,7 +183,7 @@ class ResponseFactory
      */
     public function setMessage(string $message)
     {
-        $this->serializer->message = $this->message = $message;
+        $this->serializer->message = $this->message = Str::slug($message, '_');
 
         return $this;
     }
@@ -190,7 +191,7 @@ class ResponseFactory
     /**
      * Set response success flag.
      *
-     * @param bool|boolean $status
+     * @param bool|bool $status
      *
      * @return static
      */
@@ -204,12 +205,12 @@ class ResponseFactory
     /**
      * Send a paginator response.
      *
-     * @param  mixed        $paginator
-     * @param  string       $message
-     * @param  bool|boolean $success
-     * @param  int|integer  $status
-     * @param  array        $headers
-     * @param  int|integer  $options
+     * @param mixed     $paginator
+     * @param string    $message
+     * @param bool|bool $success
+     * @param int|int   $status
+     * @param array     $headers
+     * @param int|int   $options
      *
      * @return \Illuminate\Http\JsonResponse
      */
@@ -229,7 +230,7 @@ class ResponseFactory
     /**
      * Create a paginator scope.
      *
-     * @param  mixed $paginator
+     * @param mixed $paginator
      *
      * @return \League\Fractal\Scope
      */
@@ -243,7 +244,7 @@ class ResponseFactory
     /**
      * Create a paginator resource.
      *
-     * @param  mixed $paginator
+     * @param mixed $paginator
      *
      * @return \League\Fractal\Resource\Collection
      */
@@ -352,15 +353,15 @@ class ResponseFactory
         array $headers = [],
         int $options = 0
     ) : JsonResponse {
-        $this->prepareErrorSerializer($message, false);
+        $this->prepareErrorSerializer($message ?: $this->resolveMessageFromException($e), false);
 
         return new JsonResponse($this->error($e)->toArray(), $status, $headers, $options);
     }
 
     /**
-     * Create error scope
+     * Create error scope.
      *
-     * @param  \Exception $e
+     * @param \Exception $e
      *
      * @return \League\Fractal\Scope
      */
@@ -422,8 +423,8 @@ class ResponseFactory
      */
     protected function prepareSerializer(string $message, bool $status)
     {
-        $this->serializer->status = $status;
-        $this->serializer->message = $message;
+        $this->setSuccess($status)
+            ->setMessage($message);
     }
 
     /**
