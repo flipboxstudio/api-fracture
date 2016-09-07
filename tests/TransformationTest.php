@@ -51,7 +51,7 @@ class TransformationTest extends TestCase
         $user = Test\Models\User::first();
         $resource = Flipbox\Fracture\Fracture::item($user);
 
-        $this->assertTrue(Fracture::getTransformer(true) instanceof Test\Transformers\UserTransformer);
+        $this->assertTrue(Fracture::getTransformer(true) instanceof Test\Transformers\UserTransformer, 'Transformer is an instance of Test\Transformers\UserTransformer');
         $this->assertTrue($resource instanceof League\Fractal\Scope);
         $this->assertTrue(method_exists($resource, 'toArray'));
         $this->assertTrue(is_array($resource->toArray()));

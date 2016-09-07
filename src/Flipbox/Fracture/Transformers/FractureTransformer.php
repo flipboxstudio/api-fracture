@@ -3,8 +3,10 @@
 namespace Flipbox\Fracture\Transformers;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use League\Fractal\TransformerAbstract;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class FractureTransformer extends TransformerAbstract
 {
@@ -21,6 +23,10 @@ class FractureTransformer extends TransformerAbstract
 
         if ($resource instanceof Model) {
             $method = 'transformEloquent';
+        } elseif ($resource instanceof Collection) {
+            $method = 'transformCollection';
+        } elseif ($resource instanceof LengthAwarePaginator) {
+            $method = 'transformPaginator';
         }
 
         return call_user_func_array([$this, $method], [$resource]);
@@ -47,24 +53,30 @@ class FractureTransformer extends TransformerAbstract
      */
     protected function transformEloquent(Model $resource) : array
     {
-        return $resource->toArray() + [
-            'type' => $this->getResourceTypeFromEloquent($resource),
-        ];
+        return $resource->toArray();
     }
 
     /**
-     * Get resource type from eloquent.
+     * Transform a Paginator resource.
      *
-     * @param \Illuminate\Database\Eloquent\Model $resource
+     * @param \Illuminate\Contracts\Pagination\LengthAwarePaginator $resource
      *
-     * @return string
+     * @return array
      */
-    protected function getResourceTypeFromEloquent(Model $resource) : string
+    protected function transformPaginator(LengthAwarePaginator $resource) : array
     {
-        return mb_strtolower(
-            Arr::last(
-                explode('\\', get_class($resource))
-            )
-        );
+        return $resource->toArray();
+    }
+
+    /**
+     * Transform a Collection resource.
+     *
+     * @param \Illuminate\Support\Collection $resource
+     *
+     * @return array
+     */
+    protected function transformCollection(Collection $resource) : array
+    {
+        return $resource->toArray();
     }
 }

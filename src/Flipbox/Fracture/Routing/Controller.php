@@ -4,10 +4,14 @@ namespace Flipbox\Fracture\Routing;
 
 use Flipbox\Fracture\Fracture;
 use Illuminate\Support\Fluent;
+use Illuminate\Container\Container;
+use Flipbox\Fracture\ExceptionHandler;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as IlluminateCollection;
 use Illuminate\Routing\Controller as IlluminateController;
 use Illuminate\Contracts\Pagination\Paginator as IlluminatePaginator;
+use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandler;
 
 abstract class Controller extends IlluminateController
 {
@@ -21,15 +25,34 @@ abstract class Controller extends IlluminateController
      */
     public function callAction($method, $parameters)
     {
+        $app = Container::getInstance();
+        $illuminateHandler = $app->make(IlluminateExceptionHandler::class);
+
+        $app->instance(IlluminateExceptionHandler::class, new ExceptionHandler($illuminateHandler));
+
         $response = call_user_func_array([$this, $method], $parameters);
 
-        if ($this->responseIsACollection($response)) {
+        if ($this->responseIsAPaginator($response)) {
+            $response = Fracture::responsePaginator($response);
+        } elseif ($this->responseIsACollection($response)) {
             $response = Fracture::responseCollection($response);
         } elseif ($this->responseIsAnItem($response)) {
             $response = Fracture::responseItem($response);
         }
 
         return $response;
+    }
+
+    /**
+     * Deterimine if a response type is an instance of Paginator.
+     *
+     * @param mixed $response
+     *
+     * @return bool
+     */
+    protected function responseIsAPaginator($response) : bool
+    {
+        return $response instanceof LengthAwarePaginator;
     }
 
     /**

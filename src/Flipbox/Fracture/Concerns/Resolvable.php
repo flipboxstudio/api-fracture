@@ -5,8 +5,7 @@ namespace Flipbox\Fracture\Concerns;
 use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\App;
-use Flipbox\Fracture\FractureException;
+use Flipbox\Fracture\ExceptionFractureException;
 
 trait Resolvable
 {
@@ -20,6 +19,13 @@ trait Resolvable
     protected function resolveTransformerFromCollection($collection)
     {
         foreach ($collection as $item) {
+            return $this->resolveTransformerFromItem($item);
+        }
+    }
+
+    protected function resolveTransformerFromPaginator($paginator)
+    {
+        foreach ($paginator as $item) {
             return $this->resolveTransformerFromItem($item);
         }
     }
@@ -38,13 +44,15 @@ trait Resolvable
         $transformer = $this->transformer
             ?? $this->getTransformerFromConfiguration($item)
             ?? $this->getTransformerFromRouteInformation()
-            ?? $this->getDefaultTransformer();
+            ?? $this->getDefaultTransformer()
+            ?? $this->transformerNotFound();
 
-        if ($transformer === null) {
-            throw new FractureException('Transformer not found');
-        }
+        return $this->createTransformer($this->transformer = $transformer);
+    }
 
-        return $this->createTransformer($transformer);
+    protected function transformerNotFound()
+    {
+        throw new FractureException('Transformer not found');
     }
 
     /**
@@ -54,7 +62,7 @@ trait Resolvable
      */
     protected function getDefaultTransformer()
     {
-        return App::make('config')->get('fracture.default.transformer');
+        return $this->config->get('fracture.default.transformer');
     }
 
     /**
@@ -66,12 +74,12 @@ trait Resolvable
      */
     protected function resolveErrorTransformer(Exception $e)
     {
-        $configKey = $this->normalizeConfigKey($e);
+        $configKey = $this->determineConfigKeyFromObject($e);
 
         return $this->createTransformer(
-            App::make('config')->get(
+            $this->config->get(
                 "fracture.error_transformers.{$configKey}.class",
-                App::make('config')->get('fracture.default.error_transformer')
+                $this->config->get('fracture.default.error_transformer')
             )
         );
     }
@@ -83,7 +91,7 @@ trait Resolvable
      */
     protected function getTransformerFromRouteInformation()
     {
-        if (($route = App::make('router')->current()) !== null) {
+        if (($route = $this->router->current()) !== null) {
             return Arr::get($route->getAction(), 'transformer');
         }
     }
@@ -95,9 +103,9 @@ trait Resolvable
      */
     protected function getTransformerFromConfiguration($item)
     {
-        $configKey = $this->normalizeConfigKey($item);
+        $configKey = $this->determineConfigKeyFromObject($item);
 
-        return App::make('config')->get("fracture.transformers.{$configKey}.class");
+        return $this->config->get("fracture.transformers.{$configKey}.class");
     }
 
     /**
@@ -107,7 +115,7 @@ trait Resolvable
      */
     protected function getDefaultSerializer() : string
     {
-        return App::make('config')->get('fracture.default.serializer');
+        return $this->config->get('fracture.default.serializer');
     }
 
     /**
@@ -117,15 +125,13 @@ trait Resolvable
      *
      * @return string
      */
-    protected function normalizeConfigKey($object) : string
+    protected function determineConfigKeyFromObject($object) : string
     {
-        if (!is_object($object)) {
-            return 'array';
-        }
-
-        return Str::snake(
-            str_replace('\\', '', get_class($object))
-        );
+        return (!is_object($object))
+            ? 'array'
+            : Str::snake(
+                str_replace('\\', '', get_class($object))
+            );
     }
 
     /**
@@ -135,6 +141,6 @@ trait Resolvable
      */
     protected function getDefaultErrorSerializer() : string
     {
-        return App::make('config')->get('fracture.default.error_serializer');
+        return $this->config->get('fracture.default.error_serializer');
     }
 }
