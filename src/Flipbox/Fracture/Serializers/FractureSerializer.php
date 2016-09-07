@@ -31,7 +31,7 @@ class FractureSerializer extends ArraySerializer
     public function collection($resourceKey, array $data) : array
     {
         return $this->finalizeResource(
-            ($resourceKey ?? 'data'),
+            $resourceKey,
             parent::collection($resourceKey, $data)
         );
     }
@@ -47,7 +47,7 @@ class FractureSerializer extends ArraySerializer
     public function item($resourceKey, array $data) : array
     {
         return $this->finalizeResource(
-            ($resourceKey ?? 'data'),
+            $resourceKey,
             parent::item($resourceKey, $data)
         );
     }
@@ -60,8 +60,8 @@ class FractureSerializer extends ArraySerializer
      *
      * @return array
      */
-    protected function finalizeResource(string $resourceKey, array $resource) : array
+    protected function finalizeResource($resourceKey, array $resource) : array
     {
-        return ['success' => $this->success] + [$resourceKey => $resource] + ['message' => $this->message];
+        return ['success' => $this->success] + $resource + ['message' => $this->message];
     }
 }

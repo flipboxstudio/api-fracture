@@ -35,19 +35,32 @@ Add this line to your facade list:
 
 ## Usage
 
-Register your routes endpoint from `routes/fracture.php` file:
+Fracture will override Laravel Controller invoke style. So, to make this feature works on your project, you need to change your base controller.
+Locate this file at:
 
 ```
-Api::group(['middleware' => ['auth:api']], function ($route) {
-    $route->get('/user', 'AuthController@user');
-
-    $route->resource('/resource/user', 'UserController');
-});
+app/Http/Controllers/Controller.php
 ```
 
-> **NOTE** It's important to use `Api` instead of `Route` facade, if you don't, your fracture routes will remain empty, thus makes your API endpoint inaccessible.
+Change this file into:
 
-Below is an example controller using Fracture:
+```php
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Foundation\Bus\DispatchesJobs;
+use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Flipbox\Fracture\Routing\Controller as FractureController;
+
+class Controller extends FractureController
+{
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+}
+```
+
+And you ready to rock! Below is example using fracture.
 
 ```php
 <?php

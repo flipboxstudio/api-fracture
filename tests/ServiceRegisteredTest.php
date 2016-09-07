@@ -24,27 +24,4 @@ class ServiceRegisteredTest extends TestCase
             Flipbox\Fracture\ResponseFactory
         );
     }
-
-    public function testFractureRouterIsBoundToContainer()
-    {
-        $this->assertTrue($this->app->bound('fracture.router'));
-    }
-
-    public function testFractureRouterIsBoundCorrectly()
-    {
-        $this->assertTrue(
-            $this->app->make('fracture.router')
-            instanceof
-            Flipbox\Fracture\Routing\Router
-        );
-    }
-
-    public function testFractureRouterFacadeInstance()
-    {
-        $this->assertTrue(
-            Flipbox\Fracture\Api::getFacadeRoot()
-            instanceof
-            Flipbox\Fracture\Routing\Router
-        );
-    }
 }

@@ -51,4 +51,24 @@ return [
 
     ],
 
+    /*
+     |--------------------------------------------------------------------------
+     | Routing Configuration
+     |--------------------------------------------------------------------------
+     |
+     | You can define what namespace to be used on each fracture routing.
+     | Default is 'App\Http\Controllers\Api'.
+     |
+     */
+
+    'routes' => [
+
+        // Controller Namespace
+        'namespace' => App\Http\Controllers\Api::class,
+
+        // API Subdomain
+        'subdomain' => 'api',
+
+    ],
+
 ];

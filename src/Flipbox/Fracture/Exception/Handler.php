@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandler;
 
-class ExceptionHandler implements IlluminateExceptionHandler
+class Handler implements IlluminateExceptionHandler
 {
     /**
      * The parent Illuminate exception handler instance.
