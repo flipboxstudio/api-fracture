@@ -38,6 +38,15 @@ return [
 
     ],
 
+
+    'error_transformers' => [
+
+        // 'illuminate_validation_validationException' => [
+        //     'class' => App\ErrorTransformers\ValidationExceptionTransformer::class,
+        // ],
+
+    ],
+
     /*
      |--------------------------------------------------------------------------
      | Default Configuration
@@ -52,11 +61,11 @@ return [
         // Default serializer
         'serializer' => Flipbox\Fracture\Serializers\FractureSerializer::class,
 
-        // Default error serializer
-        'error_serializer' => Flipbox\Fracture\Serializers\ErrorSerializer::class,
-
         // Default transformer
         'transformer' => Flipbox\Fracture\Transformers\FractureTransformer::class,
+
+        // Default error serializer
+        'error_serializer' => Flipbox\Fracture\Serializers\ErrorSerializer::class,
 
         // Default error transformer
         'error_transformer' => Flipbox\Fracture\Transformers\ErrorTransformer::class,

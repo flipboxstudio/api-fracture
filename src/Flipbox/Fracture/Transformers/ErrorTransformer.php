@@ -5,9 +5,7 @@ namespace Flipbox\Fracture\Transformers;
 use Exception;
 use Illuminate\Container\Container;
 use League\Fractal\TransformerAbstract;
-use Illuminate\Validation\ValidationException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 class ErrorTransformer extends TransformerAbstract
 {
@@ -22,7 +20,7 @@ class ErrorTransformer extends TransformerAbstract
     {
         return [
             'status' => 'error',
-            'code' => ($exception instanceof HttpException)
+            'code' => ($exception instanceof HttpExceptionInterface)
                 ? (int) $exception->getStatusCode()
                 : (int) $exception->getCode(),
         ] + $this->appendError($exception);
@@ -37,27 +35,12 @@ class ErrorTransformer extends TransformerAbstract
      */
     protected function appendError(Exception $exception) : array
     {
-        if (Container::getInstance()->make('config')->get('app.debug')
-            && !$exception instanceof HttpException) {
+        if (Container::getInstance()->make('config')->get('app.debug')) {
             return [
                 'type' => get_class($exception),
                 'message' => $exception->getMessage(),
                 'trace' => explode("\n", $exception->getTraceAsString()),
             ];
-        } elseif ($exception instanceof PreconditionFailedHttpException) {
-            if (($validationException = $exception->getPrevious()) instanceof ValidationException) {
-                return [
-                    'type' => 'validation_error',
-                    'errors' => $validationException->validator->errors()->toArray(),
-                ];
-            }
-        } elseif ($exception instanceof HttpException) {
-            if (($message = $exception->getMessage()) !== '') {
-                return [
-                    'type' => 'http_exception',
-                    'message' => $message,
-                ];
-            }
         }
 
         return ['type' => get_class($exception)];
