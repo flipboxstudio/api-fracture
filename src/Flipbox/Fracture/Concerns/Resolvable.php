@@ -156,18 +156,4 @@ trait Resolvable
     {
         return $this->config->get('fracture.default.error_serializer');
     }
-
-    /**
-     * Resolve Message from Exception.
-     *
-     * @param \Exception $e
-     *
-     * @return string
-     */
-    protected function resolveMessageFromException(Exception $e) : string
-    {
-        return ($e instanceof HttpExceptionInterface)
-            ? Str::slug(Arr::get(Response::$statusTexts, $e->getStatusCode(), ''), '_')
-            : '';
-    }
 }

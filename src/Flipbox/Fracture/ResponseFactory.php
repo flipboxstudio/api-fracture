@@ -3,7 +3,6 @@
 namespace Flipbox\Fracture;
 
 use Exception;
-use League\Fractal\Scope;
 use League\Fractal\Manager;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
@@ -12,13 +11,13 @@ use League\Fractal\Resource\Collection;
 use Flipbox\Fracture\Concerns\Resolvable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Routing\Registrar;
+use Flipbox\Fracture\Concerns\FractureFactory;
 use League\Fractal\Serializer\SerializerAbstract;
-use League\Fractal\Pagination\IlluminatePaginatorAdapter;
 use Illuminate\Contracts\Container\Container as ContainerContract;
 
 class ResponseFactory
 {
-    use Resolvable;
+    use Resolvable, FractureFactory;
 
     /**
      * For a flag that someone has touced a message.
@@ -37,13 +36,6 @@ class ResponseFactory
     protected $success = null;
 
     /**
-     * A transformer of resource.
-     *
-     * @var null|string
-     */
-    protected $transformer = null;
-
-    /**
      * Fractal manager.
      *
      * @var \League\Fractal\Manager
@@ -56,6 +48,13 @@ class ResponseFactory
      * @var \Flipbox\Fracture\Serializers\FractureSerializer
      */
     protected $serializer;
+
+    /**
+     * A transformer of resource.
+     *
+     * @var null|string
+     */
+    protected $transformer = null;
 
     /**
      * Laravel application instance.
@@ -80,6 +79,10 @@ class ResponseFactory
 
     /**
      * Class constructor.
+     *
+     * @param \Illuminate\Contracts\Container\Container $app
+     * @param \Illuminate\Contracts\Config\Repository   $config
+     * @param \Illuminate\Contracts\Routing\Registrar   $router
      */
     public function __construct(ContainerContract $app, Repository $config, Registrar $router)
     {
@@ -222,39 +225,9 @@ class ResponseFactory
         array $headers = [],
         int $options = 0
     ) : JsonResponse {
-        $this->prepareSerializer($this->message ?? $message, $this->success ?? $success);
+        $this->prepareSerializer(($this->message ?? $message) ?: 'success', $this->success ?? $success);
 
         return new JsonResponse($this->paginator($paginator)->toArray(), $status, $headers, $options);
-    }
-
-    /**
-     * Create a paginator scope.
-     *
-     * @param mixed $paginator
-     *
-     * @return \League\Fractal\Scope
-     */
-    public function paginator($paginator) : Scope
-    {
-        return $this->manager->createData(
-            $this->createPaginatorResource($paginator)
-        );
-    }
-
-    /**
-     * Create a paginator resource.
-     *
-     * @param mixed $paginator
-     *
-     * @return \League\Fractal\Resource\Collection
-     */
-    protected function createPaginatorResource($paginator) : Collection
-    {
-        $resource = new Collection($paginator, $this->resolveTransformerFromPaginator($paginator));
-
-        $resource->setPaginator(new IlluminatePaginatorAdapter($paginator));
-
-        return $resource;
     }
 
     /**
@@ -277,23 +250,9 @@ class ResponseFactory
         array $headers = [],
         int $options = 0
     ) : JsonResponse {
-        $this->prepareSerializer($this->message ?? $message, $this->success ?? $success);
+        $this->prepareSerializer(($this->message ?? $message) ?: 'success', $this->success ?? $success);
 
         return new JsonResponse($this->collection($collection)->toArray(), $status, $headers, $options);
-    }
-
-    /**
-     * Create collection scope.
-     *
-     * @param mixed $collection
-     *
-     * @return \League\Fractal\Scope
-     */
-    public function collection($collection) : Scope
-    {
-        return $this->manager->createData(
-            $this->createCollectionResource($collection)
-        );
     }
 
     /**
@@ -316,23 +275,9 @@ class ResponseFactory
         array $headers = [],
         int $options = 0
     ) : JsonResponse {
-        $this->prepareSerializer($this->message ?? $message, $this->success ?? $success);
+        $this->prepareSerializer(($this->message ?? $message) ?: 'success', $this->success ?? $success);
 
         return new JsonResponse($this->item($item)->toArray(), $status, $headers, $options);
-    }
-
-    /**
-     * Build item scope.
-     *
-     * @param mixed $item
-     *
-     * @return \League\Fractal\Scope
-     */
-    public function item($item) : Scope
-    {
-        return $this->manager->createData(
-            $this->createItemResource($item)
-        );
     }
 
     /**
@@ -353,49 +298,9 @@ class ResponseFactory
         array $headers = [],
         int $options = 0
     ) : JsonResponse {
-        $this->prepareErrorSerializer($message ?: $this->resolveMessageFromException($e), false);
+        $this->prepareErrorSerializer($message ?: 'error', false);
 
         return new JsonResponse($this->error($e)->toArray(), $status, $headers, $options);
-    }
-
-    /**
-     * Create error scope.
-     *
-     * @param \Exception $e
-     *
-     * @return \League\Fractal\Scope
-     */
-    public function error(Exception $e) : Scope
-    {
-        return $this->manager->createData(
-            $this->createErrorResource($e)
-        );
-    }
-
-    /**
-     * Create serializer.
-     *
-     * @param string $serializer
-     *
-     * @return mixed
-     */
-    protected function createSerializer($serializer)
-    {
-        return $this->app->make($serializer);
-    }
-
-    /**
-     * Create a transformer.
-     *
-     * @param string|\League\Fractal\TransformerAbstract $transformer
-     *
-     * @return mixed
-     */
-    protected function createTransformer($transformer)
-    {
-        return is_string($transformer)
-            ? $this->app->make($transformer)
-            : $transformer;
     }
 
     /**
@@ -425,41 +330,5 @@ class ResponseFactory
     {
         $this->setSuccess($status)
             ->setMessage($message);
-    }
-
-    /**
-     * Create resource for item type resource.
-     *
-     * @param mixed $item
-     *
-     * @return \League\Fractal\Resource\Item
-     */
-    protected function createItemResource($item) : Item
-    {
-        return new Item($item, $this->resolveTransformerFromItem($item));
-    }
-
-    /**
-     * Create resource for collection type resource.
-     *
-     * @param mixed $collection
-     *
-     * @return \League\Fractal\Resource\Collection
-     */
-    protected function createCollectionResource($collection) : Collection
-    {
-        return new Collection($collection, $this->resolveTransformerFromCollection($collection));
-    }
-
-    /**
-     * Create fail resource.
-     *
-     * @param \Exception $e
-     *
-     * @return \League\Fractal\Resource\Item
-     */
-    protected function createErrorResource(Exception $e)
-    {
-        return new Item($e, $this->resolveErrorTransformer($e));
     }
 }

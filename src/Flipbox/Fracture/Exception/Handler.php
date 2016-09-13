@@ -3,14 +3,12 @@
 namespace Flipbox\Fracture\Exception;
 
 use Exception;
-use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Flipbox\Fracture\Fracture;
 use Illuminate\Container\Container;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\HttpKernel\Exception\PreconditionFailedHttpException;
 use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandler;
 
 class Handler implements IlluminateExceptionHandler
@@ -81,7 +79,7 @@ class Handler implements IlluminateExceptionHandler
     {
         return Fracture::responseError(
             $this->getExceptionMessage($exception),
-            $exception = $this->determineTypeOfException($exception),
+            $exception,
             $this->getStatusCode($exception),
             $this->getHeaders($exception)
         );
@@ -96,40 +94,32 @@ class Handler implements IlluminateExceptionHandler
      */
     protected function getExceptionMessage(Exception $exception) : string
     {
-        if (Container::getInstance()->make('config')->get('app.debug')
-            && !$exception instanceof HttpExceptionInterface
-        ) {
-            return $exception->getMessage();
-        }
-
         return $exception instanceof HttpExceptionInterface
-            ? $exception->getMessage()
-            : 'an_error_occured';
+            ? $this->getHttpMessage($exception)
+            : (
+                Container::getInstance()->make('config')->get('app.debug')
+                    ? $exception->getMessage()
+                    : 'an_error_occured'
+            );
     }
 
     /**
-     * Replace Laravel AuthenticationException with HttpException.
+     * Get HTTP message.
      *
-     * @param \Exception $exception
+     * @param \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $exception
      *
-     * @return \Exception
+     * @return string
      */
-    protected function determineTypeOfException(Exception $exception) : Exception
+    protected function getHttpMessage(HttpExceptionInterface $exception) : string
     {
-        if ($exception instanceof AuthenticationException) {
-            $exception = new UnauthorizedHttpException(
-                $exception->getMessage(),
-                $exception
-            );
-        } elseif ($exception instanceof ValidationException) {
-            $exception = new PreconditionFailedHttpException(
-                $exception->getMessage(),
-                $exception,
-                412
-            );
-        }
-
-        return $exception;
+        return Str::slug(
+            Arr::get(
+                Response::$statusTexts,
+                $exception->getStatusCode(),
+                ''
+            ),
+            '_'
+        );
     }
 
     /**
