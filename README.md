@@ -30,7 +30,7 @@ You may need to read this file for more custom configuration.
 Add this line to your facade list:
 
 ```
-'Fracture' => Flipbox\Fracture\Fracture::class,
+'Fracture' => Flipbox\Fracture\Facades\Fracture::class,
 ```
 
 ## Usage
