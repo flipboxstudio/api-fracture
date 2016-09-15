@@ -12,16 +12,16 @@ class ServiceRegisteredTest extends TestCase
         $this->assertTrue(
             $this->app->make('fracture.factory')
             instanceof
-            Flipbox\Fracture\ResponseFactory
+            Flipbox\Fracture\Fracture
         );
     }
 
     public function testFractureFactoryFacadeInstance()
     {
         $this->assertTrue(
-            Flipbox\Fracture\Fracture::getFacadeRoot()
+            Flipbox\Fracture\Facades\Fracture::getFacadeRoot()
             instanceof
-            Flipbox\Fracture\ResponseFactory
+            Flipbox\Fracture\Fracture
         );
     }
 }

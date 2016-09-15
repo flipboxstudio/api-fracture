@@ -9,7 +9,7 @@ class TransformationTest extends TestCase
 
     public function testArrayTransformation()
     {
-        $resource = Flipbox\Fracture\Fracture::item([
+        $resource = Flipbox\Fracture\Facades\Fracture::item([
             'foo' => 'Foo',
             'bar' => 'Bar',
             'baz' => 'Baz',
@@ -24,7 +24,7 @@ class TransformationTest extends TestCase
     public function testEloquentTransformation()
     {
         $user = Test\Models\User::first();
-        $resource = Flipbox\Fracture\Fracture::item($user);
+        $resource = Flipbox\Fracture\Facades\Fracture::item($user);
 
         $this->assertTrue($resource instanceof League\Fractal\Scope);
         $this->assertTrue(method_exists($resource, 'toArray'));
@@ -33,10 +33,10 @@ class TransformationTest extends TestCase
 
     public function testEloquentCustomTransformer()
     {
-        Flipbox\Fracture\Fracture::setTransformer(Test\Transformers\UserTransformer::class);
+        Flipbox\Fracture\Facades\Fracture::setTransformer(Test\Transformers\UserTransformer::class);
 
         $user = Test\Models\User::first();
-        $resource = Flipbox\Fracture\Fracture::item($user);
+        $resource = Flipbox\Fracture\Facades\Fracture::item($user);
 
         $this->assertTrue(Fracture::getTransformer(true) instanceof Test\Transformers\UserTransformer);
         $this->assertTrue($resource instanceof League\Fractal\Scope);
@@ -49,7 +49,7 @@ class TransformationTest extends TestCase
         Config::set('fracture.transformers.test_models_user.class', Test\Transformers\UserTransformer::class);
 
         $user = Test\Models\User::first();
-        $resource = Flipbox\Fracture\Fracture::item($user);
+        $resource = Flipbox\Fracture\Facades\Fracture::item($user);
 
         $this->assertTrue(Fracture::getTransformer(true) instanceof Test\Transformers\UserTransformer, 'Transformer is an instance of Test\Transformers\UserTransformer');
         $this->assertTrue($resource instanceof League\Fractal\Scope);
@@ -60,7 +60,7 @@ class TransformationTest extends TestCase
     public function testCollectionTransformation()
     {
         $users = Test\Models\User::all();
-        $resource = Flipbox\Fracture\Fracture::collection($users);
+        $resource = Flipbox\Fracture\Facades\Fracture::collection($users);
 
         $this->assertTrue($resource instanceof League\Fractal\Scope);
         $this->assertTrue(method_exists($resource, 'toArray'));
@@ -70,7 +70,7 @@ class TransformationTest extends TestCase
     public function testErrorTransformation()
     {
         $error = new Exception();
-        $resource = Flipbox\Fracture\Fracture::error($error);
+        $resource = Flipbox\Fracture\Facades\Fracture::error($error);
 
         $this->assertTrue($resource instanceof League\Fractal\Scope);
         $this->assertTrue(method_exists($resource, 'toArray'));

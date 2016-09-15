@@ -7,8 +7,13 @@ class InstantiableTest extends TestCase
         $this->assertTrue(class_exists('Flipbox\Fracture\FractureServiceProvider'));
     }
 
-    public function testFacadeClassExists()
+    public function testFractureClassExists()
     {
         $this->assertTrue(class_exists('Flipbox\Fracture\Fracture'));
+    }
+
+    public function testFacadeClassExists()
+    {
+        $this->assertTrue(class_exists('Flipbox\Fracture\Facades\Fracture'));
     }
 }

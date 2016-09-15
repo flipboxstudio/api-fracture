@@ -48,11 +48,15 @@ class Handler implements IlluminateExceptionHandler
      *
      * @throws \Exception
      *
-     * @return mixed
+     * @return \Illuminate\Http\Response
      */
     public function render($request, Exception $exception)
     {
-        return $this->handle($exception);
+        try {
+            return $this->handle($exception);
+        } catch (Exception $e) {
+            return $this->parentHandler->render($request, $exception);
+        }
     }
 
     /**

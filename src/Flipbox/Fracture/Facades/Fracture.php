@@ -1,10 +1,10 @@
 <?php
 
-namespace Flipbox\Fracture;
+namespace Flipbox\Fracture\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-class Api extends Facade
+class Fracture extends Facade
 {
     /**
      * Get the registered name of the component.
@@ -13,6 +13,6 @@ class Api extends Facade
      */
     protected static function getFacadeAccessor()
     {
-        return 'fracture.router';
+        return 'fracture.factory';
     }
 }

@@ -36,8 +36,8 @@ class FractureServiceProvider extends ServiceProvider
      */
     protected function registerFractureResponseFactory()
     {
-        $this->app->singleton([ResponseFactory::class => 'fracture.factory'], function ($app) {
-            return new ResponseFactory(
+        $this->app->singleton([Fracture::class => 'fracture.factory'], function ($app) {
+            return new Fracture(
                 $this->app,
                 $this->app->make('config'),
                 $this->app->make('router')
