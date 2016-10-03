@@ -2,8 +2,8 @@
 
 namespace Flipbox\Fracture\Routing;
 
-use Flipbox\Fracture\Fracture;
 use Illuminate\Support\Fluent;
+use Flipbox\Fracture\Facades\Fracture;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection as IlluminateCollection;
